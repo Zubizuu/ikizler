@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İkizler Restoran - Günlük Menü Oluşturucu</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Firebase v9+ (compat mode) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #8B6F47;
+            --secondary-color: #D4AF37;
+            --accent-color: #C85A3A;
+            --text-dark: #2C2C2C;
+            --text-light: #F5F5F5;
+            --bg-light: #FEFDFB;
+            --bg-dark: #1A1A1A;
+            --border-color: #D4C5B9;
+            --success-color: #6B9B6B;
+            --error-color: #C85A3A;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #F0E8E0 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #A0845C 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 8px 30px rgba(139, 111, 71, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .header-left p {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 3px;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 20px;
+        }
+
+        .sync-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6B9B6B;
+            animation: pulse 2s infinite;
+        }
+
+        .sync-indicator.syncing {
+            animation: spin 1s linear infinite;
+            background: #D4AF37;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+            max-width: 1800px;
+            margin: 0 auto;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        /* Left Panel - Form */
+        .form-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .form-panel h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .form-section h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            color: var(--accent-color);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        input[type="file"] {
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .logo-preview {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed var(--secondary-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(200, 90, 58, 0.05) 100%);
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-preview.empty {
+            color: var(--border-color);
+            font-size: 24px;
+        }
+
+        /* Categories Management */
+        .categories-manager {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(200, 90, 58, 0.05) 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .category-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .category-item {
+            background: white;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+
+        .category-item-name {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .category-item-emoji {
+            margin-right: 5px;
+        }
+
+        .category-remove-btn {
+            background: var(--error-color);
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .category-remove-btn:hover {
+            background: #A73A2A;
+        }
+
+        .add-category-form {
+            display: grid;
+            grid-template-columns: 1fr 0.5fr 0.5fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .add-category-form input,
+        .add-category-form button {
+            padding: 8px;
+            font-size: 11px;
+        }
+
+        .add-category-form button {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-category-form button:hover {
+            background: #C49A1E;
+        }
+
+        /* Category Tabs */
+        .category-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .category-tab {
+            padding: 8px 10px;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .category-tab:hover {
+            border-color: var(--secondary-color);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .category-tab.active {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        /* Dish Items */
+        .dishes-container {
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .dish-item {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(200, 90, 58, 0.05) 100%);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--secondary-color);
+            position: relative;
+        }
+
+        .dish-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .dish-item-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 2px solid var(--secondary-color);
+            margin-bottom: 8px;
+            background: white;
+        }
+
+        .dish-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .dish-item-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 13px;
+        }
+
+        .dish-item-price {
+            color: var(--accent-color);
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .dish-remove-btn {
+            background: var(--error-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+
+        .dish-remove-btn:hover {
+            background: #A73A2A;
+            transform: scale(1.05);
+        }
+
+        /* Add Dish Form */
+        .add-dish-form {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+
+        .add-dish-form h4 {
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--primary-color);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .search-image-btn,
+        .add-dish-btn,
+        .action-btn {
+            padding: 10px 15px;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .add-dish-btn {
+            width: 100%;
+            grid-column: 1 / -1;
+        }
+
+        .search-image-btn,
+        .add-dish-btn,
+        .action-btn {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #C49A1E 100%);
+        }
+
+        .search-image-btn:hover,
+        .add-dish-btn:hover,
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .action-btn.success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #5A8A5A 100%);
+        }
+
+        .action-btn.download {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #A73A2A 100%);
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            border-right: 4px solid var(--secondary-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #A0845C 100%);
+            color: white;
+            padding: 15px 20px;
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .preview-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            background: linear-gradient(135deg, #FEFDFB 0%, #F5F1EB 100%);
+        }
+
+        #menuPreview {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+        }
+
+        .menu-logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .menu-logo img {
+            max-width: 100px;
+            height: auto;
+        }
+
+        .menu-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .menu-address {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .menu-category {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .menu-category-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .menu-dish {
+            display: grid;
+            grid-template-columns: 50px 1fr auto;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: center;
+            border-bottom: 1px dotted var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .menu-dish-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background: white;
+        }
+
+        .menu-dish-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .menu-dish-info {
+            flex: 1;
+        }
+
+        .menu-dish-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+        }
+
+        .menu-dish-price {
+            color: var(--accent-color);
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .menu-footer {
+            border-top: 2px solid var(--secondary-color);
+            margin-top: 25px;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .footer-contact {
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .footer-address {
+            font-size: 10px;
+            line-height: 1.6;
+            color: #888;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 50px auto;
+            padding: 25px;
+            border: 1px solid #888;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: var(--accent-color);
+        }
+
+        .image-search-results {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .image-result {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            overflow: hidden;
+            aspect-ratio: 1;
+            transition: all 0.3s ease;
+        }
+
+        .image-result:hover {
+            border-color: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        .image-result img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .form-panel, .preview-panel {
+                border-right: none;
+                border-bottom: 4px solid var(--secondary-color);
+            }
+
+            .category-tabs {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media print {
+            * {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+
+            #menuPreview {
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+            }
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid var(--success-color);
+            max-width: 300px;
+        }
+
+        .toast.error {
+            border-left-color: var(--error-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>🍽️ İKİZLER RESTORAN</h1>
+            <p>Günlük Menü Oluşturucu - Firebase Senkronizasyonlu</p>
+        </div>
+        <div class="sync-status">
+            <div class="sync-indicator" id="syncIndicator"></div>
+            <span id="syncStatusText">Çevrimdışı</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- LEFT PANEL: FORM -->
+        <div class="form-panel">
+            <h2>📋 Menü Ayarları</h2>
+
+            <!-- Restaurant Info -->
+            <div class="form-section">
+                <h3>Restoran Bilgileri</h3>
+                
+                <div class="form-group">
+                    <label>Restoran Logosu (Sabit)</label>
+                    <input type="file" id="logoInput" accept="image/*">
+                    <div class="logo-preview empty" id="logoPreview">📷</div>
+                    <small style="color: #999;">Logo otomatik kaydedilir</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Restoran Adı</label>
+                    <input type="text" id="restaurantName" placeholder="İkizler Restoran" value="İkizler Restoran">
+                </div>
+
+                <div class="form-group">
+                    <label>Adres</label>
+                    <input type="text" id="restaurantAddress" placeholder="Lezzetin Adresi" value="Lezzetin Adresi">
+                </div>
+
+                <div class="form-group">
+                    <label>WhatsApp İletişim</label>
+                    <input type="text" id="whatsappContact" placeholder="+90 5XX XXX XXXX" value="+90 5XX XXX XXXX">
+                </div>
+            </div>
+
+            <!-- Categories Management -->
+            <div class="form-section">
+                <h3>📚 Kategorileri Yönet</h3>
+                <div class="categories-manager">
+                    <div class="category-list" id="categoryList"></div>
+                    <div class="add-category-form">
+                        <input type="text" id="newCategoryName" placeholder="Kategori adı">
+                        <input type="text" id="newCategoryEmoji" placeholder="Emoji" maxlength="2" style="text-align: center;">
+                        <button onclick="app.addCategory()">Ekle</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Dish -->
+            <div class="form-section">
+                <h3>🍖 Yemek Ekle</h3>
+                
+                <div class="add-dish-form">
+                    <h4>Yeni Yemek Ekle</h4>
+                    
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="categorySelect"></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Yemek Adı</label>
+                        <input type="text" id="dishName" placeholder="Örn: Tavuk Beyti">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fiyat (₺)</label>
+                            <input type="number" id="dishPrice" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Yemek Görselini Ara</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <input type="text" id="dishSearchQuery" placeholder="Özel görsel adı..." style="grid-column: 1 / -1;">
+                            <button class="search-image-btn" onclick="app.searchDishImage()">🔍 Ara</button>
+                            <button class="search-image-btn" onclick="app.openImageSearchModal()">📷 Görselleri Gör</button>
+                        </div>
+                    </div>
+
+                    <div id="selectedImagePreview" style="margin-top: 10px; display: none;">
+                        <p style="font-size: 11px; font-weight: 600; margin-bottom: 8px;">Seçilen Görsel:</p>
+                        <img id="selectedImageImg" style="width: 100%; border-radius: 6px; border: 2px solid var(--secondary-color);">
+                    </div>
+
+                    <button class="add-dish-btn" onclick="app.addDish()">➕ Yemek Ekle</button>
+                </div>
+
+                <!-- Category Tabs -->
+                <div class="form-group">
+                    <label>Kategorilere Göre Görüntüle</label>
+                    <div class="category-tabs" id="categoryTabs"></div>
+                </div>
+
+                <!-- Dishes List -->
+                <div class="dishes-container" id="dishesList"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-section" style="border-bottom: none;">
+                <button class="action-btn download" onclick="app.downloadAsJPEG('portrait')">📥 JPEG İndir (1080x1920)</button>
+                <button class="action-btn download" onclick="app.downloadAsJPEG('square')">📥 JPEG İndir (1080x1080)</button>
+                <button class="action-btn download" onclick="app.downloadAsPDF()">📄 PDF Olarak İndir</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #666 0%, #444 100%);" onclick="app.clearAllData()">🗑️ Tümünü Temizle</button>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: PREVIEW -->
+        <div class="preview-panel">
+            <div class="preview-header">👀 Menü Önizlemesi</div>
+            <div class="preview-content">
+                <div id="menuPreview">
+                    <div class="menu-logo" id="previewLogo" style="display: none;">
+                        <img id="previewLogoImg" alt="Logo">
+                    </div>
+                    <div class="menu-title" id="previewTitle">İkizler Restoran</div>
+                    <div class="menu-address" id="previewAddress">Lezzetin Adresi</div>
+                    <div id="previewContent"></div>
+                    <div class="menu-footer" id="previewFooter">
+                        <div class="footer-contact">☎️ <span id="footerWhatsapp">+90 5XX XXX XXXX</span></div>
+                        <div class="footer-address" id="footerAddress">Lezzetin Adresi</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Search Modal -->
+    <div id="imageSearchModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                🖼️ Görsel Seç
+                <button class="modal-close" onclick="app.closeImageSearchModal()">&times;</button>
+            </div>
+            <div id="imageSearchResults" class="image-search-results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration - Otomatik entegre edildi
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOWO8wW6t7MAUAnoDZSbRMmHxk9ONS8V0",
+            authDomain: "ikizler-8cc4f.firebaseapp.com",
+            databaseURL: "https://ikizler-8cc4f-default-rtdb.firebaseio.com",
+            projectId: "ikizler-8cc4f",
+            storageBucket: "ikizler-8cc4f.firebasestorage.app",
+            messagingSenderId: "1057597687564",
+            appId: "1:1057597687564:web:a7a9ea369d9b3bd2e0eb29",
+            measurementId: "G-33M13C4HQQ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const storage = firebase.storage();
+
+        // App State
+        const app = {
+            dishes: {},
+            categories: {
+                'aperitif': { emoji: '🥒', name: 'Aperatif', order: 1 },
+                'salad': { emoji: '🥗', name: 'Salatalar', order: 2 },
+                'soup': { emoji: '🍲', name: 'Çorbalar', order: 3 },
+                'main': { emoji: '🍖', name: 'Izgaralar', order: 4 },
+                'stew': { emoji: '🍛', name: 'Sulu Yemekler', order: 5 },
+                'dessert': { emoji: '🍰', name: 'Tatlılar', order: 6 },
+                'drink': { emoji: '🥤', name: 'İçecekler', order: 7 }
+            },
+            currentCategory: 'all',
+            selectedImageUrl: null,
+            restaurantId: 'ikizler_default',
+            syncTimer: null,
+
+            // Initialize App
+            init() {
+                this.renderCategories();
+                this.updateCategorySelect();
+                this.renderCategoryTabs();
+                this.setupEventListeners();
+                this.loadFromFirebase();
+                this.previewUpdate();
+                
+                // Otomatik senkronizasyon - her 30 saniyede bir
+                this.syncTimer = setInterval(() => this.autoSync(), 30000);
+                
+                // İnternet bağlantısını kontrol et
+                window.addEventListener('online', () => this.updateSyncStatus());
+                window.addEventListener('offline', () => this.updateSyncStatus());
+                this.updateSyncStatus();
+            },
+
+            // Sync Status Update
+            updateSyncStatus() {
+                const indicator = document.getElementById('syncIndicator');
+                const statusText = document.getElementById('syncStatusText');
+                
+                if (navigator.onLine) {
+                    indicator.classList.add('syncing');
+                    statusText.textContent = 'Senkronizasyonda...';
+                    this.autoSync();
+                    setTimeout(() => {
+                        if (navigator.onLine) {
+                            indicator.classList.remove('syncing');
+                            statusText.textContent = 'Çevrimiçi ✓';
+                        }
+                    }, 1000);
+                } else {
+                    indicator.classList.remove('syncing');
+                    indicator.style.background = '#C85A3A';
+                    statusText.textContent = 'Çevrimdışı';
+                }
+            },
+
+            // Auto Sync to Firebase
+            autoSync() {
+                if (navigator.onLine) {
+                    const data = {
+                        restaurantName: document.getElementById('restaurantName').value,
+                        restaurantAddress: document.getElementById('restaurantAddress').value,
+                        whatsappContact: document.getElementById('whatsappContact').value,
+                        dishes: this.dishes,
+                        categories: this.categories,
+                        lastSync: new Date().toISOString()
+                    };
+
+                    database.ref(`restaurants/${this.restaurantId}`).set(data).catch(error => {
+                        console.error('Sync Error:', error);
+                    });
+                }
+            },
+
+            // Setup Event Listeners
+            setupEventListeners() {
+                document.getElementById('logoInput').addEventListener('change', (e) => this.handleLogoUpload(e));
+                document.getElementById('restaurantName').addEventListener('input', () => {
+                    this.previewUpdate();
+                    this.autoSync();
+                });
+                document.getElementById('restaurantAddress').addEventListener('input', () => {
+                    this.previewUpdate();
+                    this.autoSync();
+                });
+                document.getElementById('whatsappContact').addEventListener('input', () => {
+                    this.previewUpdate();
+                    this.autoSync();
+                });
+            },
+
+            // Handle Logo Upload - Sabit Logo
+            handleLogoUpload(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const base64 = event.target.result;
+                        document.getElementById('logoPreview').innerHTML = `<img src="${base64}">`;
+                        document.getElementById('previewLogoImg').src = base64;
+                        document.getElementById('previewLogo').style.display = 'block';
+                        this.previewUpdate();
+                        
+                        // Logo'yu Firebase'e kaydet
+                        const logoData = {
+                            logo: base64,
+                            uploadedAt: new Date().toISOString()
+                        };
+                        database.ref(`restaurants/${this.restaurantId}/logo`).set(logoData);
+                        this.showToast('Logo sabit kaydedildi ✓');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            },
+
+            // Category Management
+            renderCategories() {
+                const container = document.getElementById('categoryList');
+                container.innerHTML = Object.entries(this.categories)
+                    .sort((a, b) => a[1].order - b[1].order)
+                    .map(([key, cat]) => `
+                        <div class="category-item">
+                            <span class="category-item-emoji">${cat.emoji}</span>
+                            <span class="category-item-name">${cat.name}</span>
+                            <button class="category-remove-btn" onclick="app.removeCategory('${key}')">Sil</button>
+                        </div>
+                    `).join('');
+            },
+
+            addCategory() {
+                const name = document.getElementById('newCategoryName').value.trim();
+                const emoji = document.getElementById('newCategoryEmoji').value.trim();
+
+                if (!name || !emoji) {
+                    this.showToast('Kategori adı ve emoji girin', 'error');
+                    return;
+                }
+
+                const key = name.toLowerCase().replace(/\s+/g, '_');
+                const maxOrder = Math.max(...Object.values(this.categories).map(c => c.order), 0);
+
+                this.categories[key] = {
+                    emoji,
+                    name,
+                    order: maxOrder + 1
+                };
+
+                document.getElementById('newCategoryName').value = '';
+                document.getElementById('newCategoryEmoji').value = '';
+
+                this.renderCategories();
+                this.updateCategorySelect();
+                this.renderCategoryTabs();
+                this.autoSync();
+                this.showToast(`${name} kategorisi eklendi ✓`);
+            },
+
+            removeCategory(key) {
+                if (confirm(`"${this.categories[key].name}" kategorisini silmek istediğinizden emin misiniz?`)) {
+                    delete this.categories[key];
+                    this.renderCategories();
+                    this.updateCategorySelect();
+                    this.renderCategoryTabs();
+                    this.renderDishes();
+                    this.previewUpdate();
+                    this.autoSync();
+                    this.showToast('Kategori silindi');
+                }
+            },
+
+            updateCategorySelect() {
+                const select = document.getElementById('categorySelect');
+                select.innerHTML = Object.entries(this.categories)
+                    .sort((a, b) => a[1].order - b[1].order)
+                    .map(([key, cat]) => `<option value="${key}">${cat.emoji} ${cat.name}</option>`)
+                    .join('');
+            },
+
+            renderCategoryTabs() {
+                const container = document.getElementById('categoryTabs');
+                container.innerHTML = '<div class="category-tab active" onclick="app.filterCategory(\'all\')">Tümü</div>' +
+                    Object.entries(this.categories)
+                        .sort((a, b) => a[1].order - b[1].order)
+                        .map(([key, cat]) => `
+                            <div class="category-tab" onclick="app.filterCategory('${key}')">
+                                ${cat.emoji} ${cat.name}
+                            </div>
+                        `).join('');
+            },
+
+            // Search Dish Image
+            async searchDishImage() {
+                const query = document.getElementById('dishSearchQuery').value;
+                if (!query) {
+                    this.showToast('Lütfen aranacak yemek adını girin', 'error');
+                    return;
+                }
+
+                this.showToast('Görseller aranıyor...');
+                const fallbackImages = this.getFallbackImages(query);
+                
+                this.currentSearchResults = fallbackImages;
+                this.displayImageSearchResults(fallbackImages);
+                this.openImageSearchModal();
+            },
+
+            // Fallback Images
+            getFallbackImages(query) {
+                const images = {
+                    'tavuk': [
+                        'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1598999150923-69543654e86f?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1555939594-58d7cb561341?w=300&h=300&fit=crop'
+                    ],
+                    'biftek': [
+                        'https://images.unsplash.com/photo-1586985289688-cacf913ecc5e?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1555939594-58d7cb561341?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=300&fit=crop'
+                    ],
+                    'salata': [
+                        'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=300&h=300&fit=crop'
+                    ],
+                    'pizza': [
+                        'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1628840042765-356cda07f4ee?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1564236302483-bae0edc29add?w=300&h=300&fit=crop'
+                    ],
+                    'çorba': [
+                        'https://images.unsplash.com/photo-1547592166-7aae4d755744?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1537267471050-7c8e38f58b31?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1505252585461-04db1267ae5b?w=300&h=300&fit=crop'
+                    ],
+                    'tatlı': [
+                        'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&h=300&fit=crop'
+                    ],
+                    'içecek': [
+                        'https://images.unsplash.com/photo-1608542524529-aaa33fda8ed9?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1608502266620-a4e6f1b6e4bb?w=300&h=300&fit=crop',
+                        'https://images.unsplash.com/photo-1618183479302-1abc8d67f3d9?w=300&h=300&fit=crop'
+                    ]
+                };
+
+                const lowerQuery = query.toLowerCase();
+                for (const [key, imgs] of Object.entries(images)) {
+                    if (lowerQuery.includes(key)) return imgs;
+                }
+                return images['tavuk'];
+            },
+
+            // Display Image Search Results
+            displayImageSearchResults(images) {
+                const container = document.getElementById('imageSearchResults');
+                container.innerHTML = images.map((url, idx) => `
+                    <div class="image-result" onclick="app.selectImage('${url}')">
+                        <img src="${url}" alt="Dish ${idx + 1}" onerror="this.src='https://via.placeholder.com/200'">
+                    </div>
+                `).join('');
+            },
+
+            // Select Image
+            selectImage(url) {
+                this.selectedImageUrl = url;
+                document.getElementById('selectedImageImg').src = url;
+                document.getElementById('selectedImagePreview').style.display = 'block';
+                this.closeImageSearchModal();
+                this.showToast('Görsel seçildi ✓');
+            },
+
+            // Open Image Search Modal
+            openImageSearchModal() {
+                document.getElementById('imageSearchModal').style.display = 'block';
+            },
+
+            // Close Image Search Modal
+            closeImageSearchModal() {
+                document.getElementById('imageSearchModal').style.display = 'none';
+            },
+
+            // Add Dish
+            addDish() {
+                const name = document.getElementById('dishName').value.trim();
+                const price = parseFloat(document.getElementById('dishPrice').value);
+                const category = document.getElementById('categorySelect').value;
+
+                if (!name || !price || price <= 0) {
+                    this.showToast('Lütfen yemek adı ve fiyatını girin', 'error');
+                    return;
+                }
+
+                if (!this.selectedImageUrl) {
+                    this.showToast('Lütfen önce görsel seçin', 'error');
+                    return;
+                }
+
+                const dishId = `${category}_${Date.now()}`;
+                const dish = {
+                    id: dishId,
+                    name,
+                    price: price.toFixed(2),
+                    category,
+                    image: this.selectedImageUrl,
+                    timestamp: new Date().toISOString()
+                };
+
+                this.dishes[dishId] = dish;
+
+                // Clear Form
+                document.getElementById('dishName').value = '';
+                document.getElementById('dishPrice').value = '';
+                document.getElementById('dishSearchQuery').value = '';
+                document.getElementById('selectedImagePreview').style.display = 'none';
+                this.selectedImageUrl = null;
+
+                this.renderDishes();
+                this.previewUpdate();
+                this.autoSync();
+                this.showToast(`${name} menüye eklendi ✓`);
+            },
+
+            // Filter Category
+            filterCategory(category) {
+                this.currentCategory = category;
+                document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
+                event.target.classList.add('active');
+                this.renderDishes();
+            },
+
+            // Render Dishes
+            renderDishes() {
+                const container = document.getElementById('dishesList');
+                const filtered = Object.values(this.dishes).filter(d => 
+                    this.currentCategory === 'all' || d.category === this.currentCategory
+                );
+
+                container.innerHTML = filtered.map(dish => `
+                    <div class="dish-item">
+                        <div class="dish-item-image">
+                            <img src="${dish.image}" onerror="this.src='https://via.placeholder.com/50'">
+                        </div>
+                        <div>
+                            <div class="dish-item-name">${dish.name}</div>
+                            <div class="dish-item-price">₺${dish.price}</div>
+                        </div>
+                        <button class="dish-remove-btn" onclick="app.removeDish('${dish.id}')">Kaldır</button>
+                    </div>
+                `).join('');
+            },
+
+            // Remove Dish
+            removeDish(dishId) {
+                delete this.dishes[dishId];
+                this.renderDishes();
+                this.previewUpdate();
+                this.autoSync();
+                this.showToast('Yemek kaldırıldı');
+            },
+
+            // Preview Update
+            previewUpdate() {
+                document.getElementById('previewTitle').textContent = document.getElementById('restaurantName').value;
+                document.getElementById('previewAddress').textContent = document.getElementById('restaurantAddress').value;
+                document.getElementById('footerAddress').textContent = document.getElementById('restaurantAddress').value;
+                document.getElementById('footerWhatsapp').textContent = document.getElementById('whatsappContact').value;
+
+                const grouped = {};
+                Object.values(this.dishes).forEach(dish => {
+                    if (!grouped[dish.category]) grouped[dish.category] = [];
+                    grouped[dish.category].push(dish);
+                });
+
+                let html = '';
+                Object.entries(this.categories)
+                    .sort((a, b) => a[1].order - b[1].order)
+                    .forEach(([key, cat]) => {
+                        if (grouped[key] && grouped[key].length > 0) {
+                            html += `<div class="menu-category">
+                                <div class="menu-category-title">${cat.emoji} ${cat.name}</div>
+                                ${grouped[key].map(dish => `
+                                    <div class="menu-dish">
+                                        <div class="menu-dish-image">
+                                            <img src="${dish.image}" onerror="this.src='https://via.placeholder.com/50'">
+                                        </div>
+                                        <div class="menu-dish-info">
+                                            <div class="menu-dish-name">${dish.name}</div>
+                                            <div class="menu-dish-price">₺${dish.price}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>`;
+                        }
+                    });
+
+                document.getElementById('previewContent').innerHTML = html;
+            },
+
+            // Load from Firebase
+            async loadFromFirebase() {
+                try {
+                    const snapshot = await database.ref(`restaurants/${this.restaurantId}`).once('value');
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        document.getElementById('restaurantName').value = data.restaurantName || 'İkizler Restoran';
+                        document.getElementById('restaurantAddress').value = data.restaurantAddress || 'Lezzetin Adresi';
+                        document.getElementById('whatsappContact').value = data.whatsappContact || '+90 5XX XXX XXXX';
+                        this.dishes = data.dishes || {};
+                        if (data.categories) {
+                            this.categories = data.categories;
+                        }
+                        
+                        // Logo yükle
+                        if (data.logo && data.logo.logo) {
+                            document.getElementById('logoPreview').innerHTML = `<img src="${data.logo.logo}">`;
+                            document.getElementById('previewLogoImg').src = data.logo.logo;
+                            document.getElementById('previewLogo').style.display = 'block';
+                        }
+
+                        this.renderCategories();
+                        this.updateCategorySelect();
+                        this.renderCategoryTabs();
+                        this.renderDishes();
+                        this.previewUpdate();
+                        this.showToast('Firebase\'den yüklendi ✓');
+                    }
+                } catch (error) {
+                    console.error('Load Error:', error);
+                }
+            },
+
+            // Download as JPEG
+            async downloadAsJPEG(format = 'portrait') {
+                this.showToast('JPEG oluşturuluyor...');
+                try {
+                    const element = document.getElementById('menuPreview');
+                    const width = 1080;
+                    const height = format === 'portrait' ? 1920 : 1080;
+
+                    const canvas = await html2canvas(element, {
+                        scale: 2,
+                        backgroundColor: '#FEFDFB',
+                        logging: false,
+                        useCORS: true,
+                        allowTaint: true,
+                        width: width,
+                        height: height
+                    });
+
+                    // JPEG olarak dönüştür
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `menu_${new Date().toISOString().slice(0,10)}_${width}x${height}.jpg`;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                        this.showToast('JPEG indirildi ✓');
+                    }, 'image/jpeg', 0.95);
+                } catch (error) {
+                    console.error('Download Error:', error);
+                    this.showToast('İndirme hatası: ' + error.message, 'error');
+                }
+            },
+
+            // Download as PDF
+            async downloadAsPDF() {
+                this.showToast('PDF oluşturuluyor...');
+                try {
+                    const element = document.getElementById('menuPreview');
+                    const canvas = await html2canvas(element, {
+                        scale: 2,
+                        backgroundColor: '#FEFDFB',
+                        logging: false,
+                        useCORS: true,
+                        allowTaint: true
+                    });
+
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    const imgWidth = 190;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 10;
+
+                    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                    heightLeft -= (pdf.internal.pageSize.getHeight() - 20);
+
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                        heightLeft -= pdf.internal.pageSize.getHeight();
+                    }
+
+                    pdf.save(`menu_${new Date().toISOString().slice(0,10)}.pdf`);
+                    this.showToast('PDF indirildi ✓');
+                } catch (error) {
+                    console.error('PDF Error:', error);
+                    this.showToast('PDF oluşturma hatası: ' + error.message, 'error');
+                }
+            },
+
+            // Clear All Data
+            clearAllData() {
+                if (confirm('Tüm verileri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+                    this.dishes = {};
+                    document.getElementById('restaurantName').value = 'İkizler Restoran';
+                    document.getElementById('restaurantAddress').value = 'Lezzetin Adresi';
+                    document.getElementById('whatsappContact').value = '+90 5XX XXX XXXX';
+                    document.getElementById('logoPreview').innerHTML = '📷';
+                    document.getElementById('previewLogo').style.display = 'none';
+                    this.renderDishes();
+                    this.previewUpdate();
+                    this.autoSync();
+                    this.showToast('Tüm veriler temizlendi');
+                }
+            },
+
+            // Show Toast Notification
+            showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        };
+
+        // Initialize App on Load
+        window.addEventListener('DOMContentLoaded', () => app.init());
+
+        // Close modal when clicking outside
+        window.onclick = (event) => {
+            const modal = document.getElementById('imageSearchModal');
+            if (event.target === modal) {
+                app.closeImageSearchModal();
+            }
+        };
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (app.syncTimer) clearInterval(app.syncTimer);
+        });
+    </script>
+</body>
+</html>
