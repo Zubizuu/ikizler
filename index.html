@@ -1073,8 +1073,8 @@
             <h1>🍽️ İKİZLER RESTORAN</h1>
             <p>Günlük Menü Oluşturucu - Firebase Senkronizasyonlu</p>
         </div>
-        <div class="header-actions">
-            <button class="settings-btn" onclick="app.openSettingsModal()">⚙️ Ayarlar</button>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button onclick="document.getElementById('settingsModal').style.display='block'" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">⚙️ Ayarlar</button>
             <div class="sync-status">
                 <div class="sync-indicator" id="syncIndicator"></div>
                 <span id="syncStatusText">Çevrimdışı</span>
@@ -1207,62 +1207,46 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="settings-modal">
+    <div id="settingsModal" class="settings-modal" onclick="if(event.target.id==='settingsModal') document.getElementById('settingsModal').style.display='none'">
         <div class="settings-modal-content">
             <div class="settings-header">
                 <h2>⚙️ Ayarlar</h2>
-                <button class="settings-close" onclick="app.closeSettingsModal()">&times;</button>
+                <button onclick="document.getElementById('settingsModal').style.display='none'" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; padding: 5px; border-radius: 50%;">&times;</button>
             </div>
             <div class="settings-body">
                 <div class="settings-tabs">
-                    <div class="settings-tab active" onclick="app.switchSettingsTab('restaurant')">🏪 Restoran</div>
-                    <div class="settings-tab" onclick="app.switchSettingsTab('categories')">📚 Kategoriler</div>
-                    <div class="settings-tab" onclick="app.switchSettingsTab('theme')">🎨 Tema</div>
-                    <div class="settings-tab" onclick="app.switchSettingsTab('menu')">📋 Menü</div>
-                    <div class="settings-tab" onclick="app.switchSettingsTab('website')">🌐 Web Sitesi</div>
+                    <div class="settings-tab active" onclick="document.querySelectorAll('.settings-content').forEach(x=>x.classList.remove('active')); document.getElementById('restaurantSettings').classList.add('active'); document.querySelectorAll('.settings-tab').forEach(x=>x.classList.remove('active')); event.target.classList.add('active')">🏪 Restoran</div>
+                    <div class="settings-tab" onclick="document.querySelectorAll('.settings-content').forEach(x=>x.classList.remove('active')); document.getElementById('categoriesSettings').classList.add('active'); document.querySelectorAll('.settings-tab').forEach(x=>x.classList.remove('active')); event.target.classList.add('active')">📚 Kategoriler</div>
+                    <div class="settings-tab" onclick="document.querySelectorAll('.settings-content').forEach(x=>x.classList.remove('active')); document.getElementById('themeSettings').classList.add('active'); document.querySelectorAll('.settings-tab').forEach(x=>x.classList.remove('active')); event.target.classList.add('active')">🎨 Tema</div>
                 </div>
 
                 <!-- Restaurant Settings -->
-                <div id="restaurantSettings" class="settings-content active">
+                <div id="restaurantSettings" class="settings-content active" style="display: block;">
                     <div class="settings-section">
                         <h3>Restoran Bilgileri</h3>
                         <div class="settings-grid">
                             <div class="settings-group">
-                                <h4>Temel Bilgiler</h4>
-                                <div class="form-group">
-                                    <label>Restoran Adı</label>
-                                    <input type="text" id="settingsRestaurantName" placeholder="İkizler Restoran">
-                                </div>
-                                <div class="form-group">
-                                    <label>Adres</label>
-                                    <input type="text" id="settingsRestaurantAddress" placeholder="Lezzetin Adresi">
-                                </div>
-                                <div class="form-group">
-                                    <label>WhatsApp</label>
-                                    <input type="text" id="settingsWhatsappContact" placeholder="+90 5XX XXX XXXX">
-                                </div>
+                                <label style="font-weight:600;">Restoran Adı</label>
+                                <input type="text" id="settingsRestaurantName" placeholder="İkizler Restoran" style="width: 100%; padding: 10px; margin-top: 5px;">
+                                <label style="font-weight:600; display: block; margin-top: 10px;">Adres</label>
+                                <input type="text" id="settingsRestaurantAddress" placeholder="Lezzetin Adresi" style="width: 100%; padding: 10px; margin-top: 5px;">
+                                <label style="font-weight:600; display: block; margin-top: 10px;">WhatsApp</label>
+                                <input type="text" id="settingsWhatsappContact" placeholder="+90 5XX XXX XXXX" style="width: 100%; padding: 10px; margin-top: 5px;">
                             </div>
                             <div class="settings-group">
-                                <h4>İletişim Bilgileri</h4>
-                                <div class="form-group">
-                                    <label>Telefon</label>
-                                    <input type="text" id="settingsPhone" placeholder="+90 216 XXX XX XX">
-                                </div>
-                                <div class="form-group">
-                                    <label>E-posta</label>
-                                    <input type="email" id="settingsEmail" placeholder="info@ikizler.com">
-                                </div>
-                                <div class="form-group">
-                                    <label>Web Sitesi</label>
-                                    <input type="url" id="settingsWebsite" placeholder="https://ikizler.com">
-                                </div>
+                                <label style="font-weight:600;">Telefon</label>
+                                <input type="text" id="settingsPhone" placeholder="+90 216 XXX XX XX" style="width: 100%; padding: 10px; margin-top: 5px;">
+                                <label style="font-weight:600; display: block; margin-top: 10px;">E-posta</label>
+                                <input type="email" id="settingsEmail" placeholder="info@ikizler.com" style="width: 100%; padding: 10px; margin-top: 5px;">
+                                <label style="font-weight:600; display: block; margin-top: 10px;">Web Sitesi</label>
+                                <input type="url" id="settingsWebsite" placeholder="https://ikizler.com" style="width: 100%; padding: 10px; margin-top: 5px;">
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Categories Settings -->
-                <div id="categoriesSettings" class="settings-content">
+                <div id="categoriesSettings" class="settings-content" style="display: none;">
                     <div class="settings-section">
                         <h3>Kategori Yönetimi</h3>
                         <div class="categories-manager">
@@ -1277,125 +1261,28 @@
                 </div>
 
                 <!-- Theme Settings -->
-                <div id="themeSettings" class="settings-content">
+                <div id="themeSettings" class="settings-content" style="display: none;">
                     <div class="settings-section">
                         <h3>Renk Teması</h3>
                         <div class="settings-grid">
                             <div class="settings-group">
-                                <h4>Ana Renkler</h4>
-                                <div class="color-picker">
-                                    <input type="color" id="primaryColor" class="color-input" value="#8B6F47">
-                                    <span class="color-label">Ana Renk</span>
-                                </div>
-                                <div class="color-picker">
-                                    <input type="color" id="secondaryColor" class="color-input" value="#D4AF37">
-                                    <span class="color-label">İkincil Renk</span>
-                                </div>
-                                <div class="color-picker">
-                                    <input type="color" id="accentColor" class="color-input" value="#C85A3A">
-                                    <span class="color-label">Vurgu Rengi</span>
-                                </div>
+                                <label style="font-weight:600;">Ana Renk</label>
+                                <input type="color" id="primaryColor" value="#8B6F47" style="width: 100%; height: 40px; border: none; border-radius: 4px; margin-top: 5px; cursor: pointer;">
                             </div>
                             <div class="settings-group">
-                                <h4>Arka Plan</h4>
-                                <div class="color-picker">
-                                    <input type="color" id="bgLight" class="color-input" value="#FEFDFB">
-                                    <span class="color-label">Açık Arka Plan</span>
-                                </div>
-                                <div class="color-picker">
-                                    <input type="color" id="bgDark" class="color-input" value="#1A1A1A">
-                                    <span class="color-label">Koyu Arka Plan</span>
-                                </div>
+                                <label style="font-weight:600;">İkincil Renk</label>
+                                <input type="color" id="secondaryColor" value="#D4AF37" style="width: 100%; height: 40px; border: none; border-radius: 4px; margin-top: 5px; cursor: pointer;">
+                            </div>
+                            <div class="settings-group">
+                                <label style="font-weight:600;">Vurgu Rengi</label>
+                                <input type="color" id="accentColor" value="#C85A3A" style="width: 100%; height: 40px; border: none; border-radius: 4px; margin-top: 5px; cursor: pointer;">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Menu Settings -->
-                <div id="menuSettings" class="settings-content">
-                    <div class="settings-section">
-                        <h3>Menü Tasarımı</h3>
-                        <div class="settings-grid">
-                            <div class="settings-group">
-                                <h4>Font Ayarları</h4>
-                                <div class="form-group">
-                                    <label>Başlık Fontu</label>
-                                    <select id="titleFont">
-                                        <option value="'Playfair Display', serif">Playfair Display</option>
-                                        <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
-                                        <option value="'Poppins', sans-serif">Poppins</option>
-                                        <option value="'Arial', sans-serif">Arial</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>İçerik Fontu</label>
-                                    <select id="contentFont">
-                                        <option value="'Poppins', sans-serif">Poppins</option>
-                                        <option value="'Arial', sans-serif">Arial</option>
-                                        <option value="'Times New Roman', serif">Times New Roman</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="settings-group">
-                                <h4>Görsel Ayarları</h4>
-                                <div class="form-group">
-                                    <label>Görsel Kalitesi</label>
-                                    <select id="imageQuality">
-                                        <option value="high">Yüksek</option>
-                                        <option value="medium">Orta</option>
-                                        <option value="low">Düşük</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Görsel Boyutu</label>
-                                    <select id="imageSize">
-                                        <option value="large">Büyük</option>
-                                        <option value="medium">Orta</option>
-                                        <option value="small">Küçük</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Website Settings -->
-                <div id="websiteSettings" class="settings-content">
-                    <div class="settings-section">
-                        <h3>Web Sitesi Ayarları</h3>
-                        <div class="settings-grid">
-                            <div class="settings-group">
-                                <h4>SEO Ayarları</h4>
-                                <div class="form-group">
-                                    <label>Meta Açıklama</label>
-                                    <textarea id="metaDescription" rows="3" placeholder="Restoranınızın kısa açıklaması..."></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label>Anahtar Kelimeler</label>
-                                    <input type="text" id="metaKeywords" placeholder="restoran, yemek, menü, lezzet">
-                                </div>
-                            </div>
-                            <div class="settings-group">
-                                <h4>Sosyal Medya</h4>
-                                <div class="form-group">
-                                    <label>Facebook</label>
-                                    <input type="url" id="facebookUrl" placeholder="https://facebook.com/ikizler">
-                                </div>
-                                <div class="form-group">
-                                    <label>Instagram</label>
-                                    <input type="url" id="instagramUrl" placeholder="https://instagram.com/ikizler">
-                                </div>
-                                <div class="form-group">
-                                    <label>Google Maps</label>
-                                    <input type="url" id="mapsUrl" placeholder="https://maps.google.com/...">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="text-align: center;">
-                    <button class="save-settings-btn" onclick="app.saveSettings()">💾 Ayarları Kaydet</button>
+                <div style="text-align: center; padding: 20px;">
+                    <button onclick="app.saveSettings()" style="background: linear-gradient(135deg, #6B9B6B 0%, #5A8A5A 100%); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px;">💾 Ayarları Kaydet</button>
                 </div>
             </div>
         </div>
@@ -1438,26 +1325,23 @@
 
             // Initialize App
             init() {
-                this.loadFromLocalStorage(); // Önce localStorage'dan yükle
+                this.loadFromLocalStorage();
                 this.renderCategories();
                 this.updateCategorySelect();
                 this.renderCategoryTabs();
                 this.setupEventListeners();
-                this.loadFromFirebase(); // Sonra Firebase'den yükle (üzerine yaz)
-                
-                // Load and apply settings
-                const settings = this.loadSettings();
-                this.applySettings(settings);
+                this.loadFromFirebase();
                 
                 this.previewUpdate();
                 
-                // Otomatik senkronizasyon - her 30 saniyede bir
                 this.syncTimer = setInterval(() => this.autoSync(), 30000);
                 
-                // İnternet bağlantısını kontrol et
                 window.addEventListener('online', () => this.updateSyncStatus());
                 window.addEventListener('offline', () => this.updateSyncStatus());
                 this.updateSyncStatus();
+                
+                // Load and render settings categories
+                this.renderCategoriesInSettings();
             },
 
             // Sync Status Update
@@ -1794,62 +1678,32 @@
                 this.showToast('Görsel seçildi ✓');
             },
 
-            // Open Settings Modal
-            openSettingsModal() {
-                document.getElementById('settingsModal').style.display = 'block';
-                this.loadSettingsToModal();
-                this.renderCategoriesInSettings();
-            },
+            // Save Settings
+            saveSettings() {
+                const settings = {
+                    phone: document.getElementById('settingsPhone').value,
+                    email: document.getElementById('settingsEmail').value,
+                    website: document.getElementById('settingsWebsite').value,
+                    primaryColor: document.getElementById('primaryColor').value,
+                    secondaryColor: document.getElementById('secondaryColor').value,
+                    accentColor: document.getElementById('accentColor').value,
+                    lastUpdated: new Date().toISOString()
+                };
 
-            // Close Settings Modal
-            closeSettingsModal() {
-                document.getElementById('settingsModal').style.display = 'none';
-            },
-
-            // Switch Settings Tab
-            switchSettingsTab(tabName) {
-                // Hide all tabs
-                document.querySelectorAll('.settings-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.querySelectorAll('.settings-tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-
-                // Show selected tab
-                document.getElementById(tabName + 'Settings').classList.add('active');
-                event.target.classList.add('active');
-            },
-
-            // Load Settings to Modal
-            loadSettingsToModal() {
-                document.getElementById('settingsRestaurantName').value = document.getElementById('restaurantName').value;
-                document.getElementById('settingsRestaurantAddress').value = document.getElementById('restaurantAddress').value;
-                document.getElementById('settingsWhatsappContact').value = document.getElementById('whatsappContact').value;
-                
-                // Load additional settings from localStorage or defaults
-                const settings = this.loadSettings();
-                document.getElementById('settingsPhone').value = settings.phone || '';
-                document.getElementById('settingsEmail').value = settings.email || '';
-                document.getElementById('settingsWebsite').value = settings.website || '';
-                document.getElementById('metaDescription').value = settings.metaDescription || '';
-                document.getElementById('metaKeywords').value = settings.metaKeywords || '';
-                document.getElementById('facebookUrl').value = settings.facebookUrl || '';
-                document.getElementById('instagramUrl').value = settings.instagramUrl || '';
-                document.getElementById('mapsUrl').value = settings.mapsUrl || '';
-
-                // Load theme colors
-                document.getElementById('primaryColor').value = settings.primaryColor || '#8B6F47';
-                document.getElementById('secondaryColor').value = settings.secondaryColor || '#D4AF37';
-                document.getElementById('accentColor').value = settings.accentColor || '#C85A3A';
-                document.getElementById('bgLight').value = settings.bgLight || '#FEFDFB';
-                document.getElementById('bgDark').value = settings.bgDark || '#1A1A1A';
-
-                // Load font settings
-                document.getElementById('titleFont').value = settings.titleFont || "'Playfair Display', serif";
-                document.getElementById('contentFont').value = settings.contentFont || "'Poppins', sans-serif";
-                document.getElementById('imageQuality').value = settings.imageQuality || 'high';
-                document.getElementById('imageSize').value = settings.imageSize || 'medium';
+                try {
+                    localStorage.setItem(`ikizler_settings_${this.restaurantId}`, JSON.stringify(settings));
+                    
+                    // Apply colors
+                    document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
+                    document.documentElement.style.setProperty('--secondary-color', settings.secondaryColor);
+                    document.documentElement.style.setProperty('--accent-color', settings.accentColor);
+                    
+                    document.getElementById('settingsModal').style.display = 'none';
+                    this.showToast('Ayarlar kaydedildi ✓');
+                } catch (error) {
+                    console.error('Settings Save Error:', error);
+                    this.showToast('Hata oluştu', 'error');
+                }
             },
 
             // Load Settings
@@ -1858,87 +1712,8 @@
                     const settings = localStorage.getItem(`ikizler_settings_${this.restaurantId}`);
                     return settings ? JSON.parse(settings) : {};
                 } catch (error) {
-                    console.error('Settings Load Error:', error);
                     return {};
                 }
-            },
-
-            // Save Settings
-            saveSettings() {
-                const settings = {
-                    phone: document.getElementById('settingsPhone').value,
-                    email: document.getElementById('settingsEmail').value,
-                    website: document.getElementById('settingsWebsite').value,
-                    metaDescription: document.getElementById('metaDescription').value,
-                    metaKeywords: document.getElementById('metaKeywords').value,
-                    facebookUrl: document.getElementById('facebookUrl').value,
-                    instagramUrl: document.getElementById('instagramUrl').value,
-                    mapsUrl: document.getElementById('mapsUrl').value,
-                    primaryColor: document.getElementById('primaryColor').value,
-                    secondaryColor: document.getElementById('secondaryColor').value,
-                    accentColor: document.getElementById('accentColor').value,
-                    bgLight: document.getElementById('bgLight').value,
-                    bgDark: document.getElementById('bgDark').value,
-                    titleFont: document.getElementById('titleFont').value,
-                    contentFont: document.getElementById('contentFont').value,
-                    imageQuality: document.getElementById('imageQuality').value,
-                    imageSize: document.getElementById('imageSize').value,
-                    lastUpdated: new Date().toISOString()
-                };
-
-                try {
-                    localStorage.setItem(`ikizler_settings_${this.restaurantId}`, JSON.stringify(settings));
-                    this.applySettings(settings);
-                    this.closeSettingsModal();
-                    this.showToast('Ayarlar kaydedildi ✓');
-                } catch (error) {
-                    console.error('Settings Save Error:', error);
-                    this.showToast('Ayarlar kaydedilirken hata oluştu', 'error');
-                }
-            },
-
-            // Apply Settings
-            applySettings(settings) {
-                if (settings.primaryColor) {
-                    document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
-                }
-                if (settings.secondaryColor) {
-                    document.documentElement.style.setProperty('--secondary-color', settings.secondaryColor);
-                }
-                if (settings.accentColor) {
-                    document.documentElement.style.setProperty('--accent-color', settings.accentColor);
-                }
-                if (settings.bgLight) {
-                    document.documentElement.style.setProperty('--bg-light', settings.bgLight);
-                }
-                if (settings.bgDark) {
-                    document.documentElement.style.setProperty('--bg-dark', settings.bgDark);
-                }
-
-                // Apply fonts
-                if (settings.titleFont) {
-                    const titleElements = document.querySelectorAll('.menu-title, h1, h2');
-                    titleElements.forEach(el => el.style.fontFamily = settings.titleFont);
-                }
-                if (settings.contentFont) {
-                    document.body.style.fontFamily = settings.contentFont;
-                }
-
-                this.previewUpdate();
-            },
-
-            // Render Categories in Settings
-            renderCategoriesInSettings() {
-                const container = document.getElementById('settingsCategoryList');
-                container.innerHTML = Object.entries(this.categories)
-                    .sort((a, b) => a[1].order - b[1].order)
-                    .map(([key, cat]) => `
-                        <div class="category-item">
-                            <span class="category-item-emoji">${cat.emoji}</span>
-                            <span class="category-item-name">${cat.name}</span>
-                            <button class="category-remove-btn" onclick="app.removeCategory('${key}')">Sil</button>
-                        </div>
-                    `).join('');
             },
 
             // Add Category from Settings
@@ -1968,6 +1743,20 @@
                 this.renderCategoryTabs();
                 this.autoSync();
                 this.showToast(`${name} kategorisi eklendi ✓`);
+            },
+
+            // Render Categories in Settings
+            renderCategoriesInSettings() {
+                const container = document.getElementById('settingsCategoryList');
+                container.innerHTML = Object.entries(this.categories)
+                    .sort((a, b) => a[1].order - b[1].order)
+                    .map(([key, cat]) => `
+                        <div class="category-item">
+                            <span class="category-item-emoji">${cat.emoji}</span>
+                            <span class="category-item-name">${cat.name}</span>
+                            <button class="category-remove-btn" onclick="app.removeCategory('${key}')">Sil</button>
+                        </div>
+                    `).join('');
             },
 
             // Add Dish
