@@ -80,25 +80,6 @@
             gap: 15px;
         }
 
-        .settings-btn {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .settings-btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-1px);
-        }
-
         .sync-status {
             display: flex;
             align-items: center;
@@ -132,9 +113,7 @@
         }
 
         .container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            display: block;
             padding: 30px;
             max-width: 1800px;
             margin: 0 auto;
@@ -528,10 +507,15 @@
         #menuPreview {
             width: 100%;
             background: white;
+            background-image: 
+                linear-gradient(rgba(139, 111, 71, 0.05) 0%, rgba(139, 111, 71, 0.02) 50%, rgba(139, 111, 71, 0.05) 100%),
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="letterhead" patternUnits="userSpaceOnUse" width="100" height="100"><rect width="100" height="100" fill="transparent"/><circle cx="20" cy="20" r="1" fill="rgba(139,111,71,0.1)"/><circle cx="80" cy="30" r="0.8" fill="rgba(139,111,71,0.08)"/><circle cx="40" cy="70" r="0.6" fill="rgba(139,111,71,0.06)"/><circle cx="90" cy="80" r="0.9" fill="rgba(139,111,71,0.07)"/></pattern></defs><rect width="100" height="100" fill="url(%23letterhead)"/></svg>');
+            background-size: cover;
             border-radius: 8px;
             padding: 30px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
         .menu-watermark {
@@ -899,7 +883,7 @@
         /* Responsive */
         @media (max-width: 1200px) {
             .container {
-                grid-template-columns: 1fr;
+                display: block;
                 height: auto;
                 padding: 20px;
             }
@@ -1074,7 +1058,10 @@
             <p>Günlük Menü Oluşturucu - Firebase Senkronizasyonlu</p>
         </div>
         <div style="display: flex; align-items: center; gap: 15px;">
-            <button onclick="document.getElementById('settingsModal').style.display='block'" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">⚙️ Ayarlar</button>
+            <div id="tabButtons" style="display: flex; gap: 10px;">
+                <button onclick="app.switchMainTab('menu')" id="menuTabBtn" style="background: var(--secondary-color); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">📋 Menü Oluşturucu</button>
+                <button onclick="app.switchMainTab('settings')" id="settingsTabBtn" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">⚙️ Ayarlar</button>
+            </div>
             <div class="sync-status">
                 <div class="sync-indicator" id="syncIndicator"></div>
                 <span id="syncStatusText">Çevrimdışı</span>
@@ -1083,8 +1070,95 @@
     </div>
 
     <div class="container">
-        <!-- LEFT PANEL: FORM -->
-        <div class="form-panel">
+        <!-- SETTINGS/CATEGORIES MENU (NEW) -->
+        <div id="settingsPanel" style="display: none; background: white; border-radius: 12px; padding: 25px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1); border-right: 4px solid var(--secondary-color); overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-family: 'Playfair Display', serif; font-size: 22px; color: var(--primary-color); margin: 0;">⚙️ Ayarlar & Kategoriler</h2>
+            </div>
+
+            <!-- Tabs -->
+            <div style="display: flex; gap: 10px; border-bottom: 2px solid var(--border-color); margin-bottom: 20px;">
+                <button onclick="app.switchSettingsTab('restaurant')" class="settings-menu-tab active" style="padding: 10px 15px; background: var(--secondary-color); color: white; border: none; border-radius: 4px 4px 0 0; cursor: pointer; font-weight: 600;">🏪 Restoran</button>
+                <button onclick="app.switchSettingsTab('categories')" class="settings-menu-tab" style="padding: 10px 15px; background: white; color: var(--text-dark); border: 1px solid var(--border-color); border-bottom: none; border-radius: 4px 4px 0 0; cursor: pointer; font-weight: 600;">📚 Kategoriler</button>
+                <button onclick="app.switchSettingsTab('website')" class="settings-menu-tab" style="padding: 10px 15px; background: white; color: var(--text-dark); border: 1px solid var(--border-color); border-bottom: none; border-radius: 4px 4px 0 0; cursor: pointer; font-weight: 600;">🌐 Web Sitesi</button>
+            </div>
+
+            <!-- Restaurant Settings Tab -->
+            <div id="settingsTabRestaurant" class="settings-menu-content">
+                <div class="form-section">
+                    <h3>Restoran Bilgileri</h3>
+                    <div class="form-group">
+                        <label>Restoran Adı</label>
+                        <input type="text" id="menuRestaurantName" placeholder="İkizler Restoran">
+                    </div>
+                    <div class="form-group">
+                        <label>Adres</label>
+                        <input type="text" id="menuRestaurantAddress" placeholder="Lezzetin Adresi">
+                    </div>
+                    <div class="form-group">
+                        <label>WhatsApp</label>
+                        <input type="text" id="menuRestaurantWhatsapp" placeholder="+90 5XX XXX XXXX">
+                    </div>
+                </div>
+                <div class="form-section">
+                    <h3>İletişim Bilgileri</h3>
+                    <div class="form-group">
+                        <label>Telefon</label>
+                        <input type="text" id="menuRestaurantPhone" placeholder="+90 216 XXX XX XX">
+                    </div>
+                    <div class="form-group">
+                        <label>E-posta</label>
+                        <input type="email" id="menuRestaurantEmail" placeholder="info@ikizler.com">
+                    </div>
+                </div>
+                <button onclick="app.saveRestaurantSettings()" class="action-btn success" style="width: 100%; margin-top: 20px;">💾 Kaydet</button>
+            </div>
+
+            <!-- Categories Settings Tab -->
+            <div id="settingsTabCategories" class="settings-menu-content" style="display: none;">
+                <div class="form-section">
+                    <h3>📚 Kategorileri Yönet</h3>
+                    <div class="categories-manager">
+                        <div class="category-list" id="menuCategoryList"></div>
+                        <div class="add-category-form">
+                            <input type="text" id="menuNewCategoryName" placeholder="Kategori adı">
+                            <input type="text" id="menuNewCategoryEmoji" placeholder="Emoji" maxlength="2" style="text-align: center;">
+                            <button onclick="app.addCategoryFromMenu()">Ekle</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Website Settings Tab -->
+            <div id="settingsTabWebsite" class="settings-menu-content" style="display: none;">
+                <div class="form-section">
+                    <h3>Web Sitesi Bilgileri</h3>
+                    <div class="form-group">
+                        <label>Web Sitesi URL</label>
+                        <input type="url" id="menuWebsiteUrl" placeholder="https://ikizler.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Google Maps</label>
+                        <input type="url" id="menuMapsUrl" placeholder="https://maps.google.com/...">
+                    </div>
+                </div>
+                <div class="form-section">
+                    <h3>Sosyal Medya</h3>
+                    <div class="form-group">
+                        <label>Facebook</label>
+                        <input type="url" id="menuFacebookUrl" placeholder="https://facebook.com/ikizler">
+                    </div>
+                    <div class="form-group">
+                        <label>Instagram</label>
+                        <input type="url" id="menuInstagramUrl" placeholder="https://instagram.com/ikizler">
+                    </div>
+                </div>
+                <button onclick="app.saveWebsiteSettings()" class="action-btn success" style="width: 100%; margin-top: 20px;">💾 Kaydet</button>
+            </div>
+        </div>
+
+        <!-- LEFT PANEL: FORM (Normal View) -->
+        <div class="form-panel" id="formPanel">
             <h2>📋 Menü Oluşturucu</h2>
 
             <!-- Restaurant Info -->
@@ -1139,11 +1213,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Yemek Görselini Ara</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <input type="text" id="dishSearchQuery" placeholder="Özel görsel adı..." style="grid-column: 1 / -1;">
+                        <label>Yemek Görselini Ekle <span style="color: #999; font-size: 11px;">(Opsiyonel)</span></label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                            <input type="text" id="dishSearchQuery" placeholder="Arama..." style="grid-column: 1 / -1;">
                             <button class="search-image-btn" onclick="app.searchDishImage()">🔍 Ara</button>
                             <button class="search-image-btn" onclick="app.openImageSearchModal()">📷 Görselleri Gör</button>
+                            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;" onchange="app.handleCameraImage(event)">
+                            <button class="search-image-btn" onclick="document.getElementById('cameraInput').click()">📸 Kamera</button>
                         </div>
                     </div>
 
@@ -1167,8 +1243,7 @@
 
             <!-- Action Buttons -->
             <div class="form-section" style="border-bottom: none;">
-                <button class="action-btn download" onclick="app.downloadAsJPEG('portrait')">📥 JPEG İndir (1080x1920)</button>
-                <button class="action-btn download" onclick="app.downloadAsJPEG('square')">📥 JPEG İndir (1080x1080)</button>
+                <button class="action-btn download" onclick="app.downloadAsJPEG('a4')">📥 JPEG İndir (A4 210x297mm)</button>
                 <button class="action-btn download" onclick="app.downloadAsPDF()">📄 PDF Olarak İndir</button>
                 <button class="action-btn" style="background: linear-gradient(135deg, #666 0%, #444 100%);" onclick="app.clearAllData()">🗑️ Tümünü Temizle</button>
             </div>
@@ -1203,88 +1278,6 @@
                 <button class="modal-close" onclick="app.closeImageSearchModal()">&times;</button>
             </div>
             <div id="imageSearchResults" class="image-search-results"></div>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="settings-modal" onclick="if(event.target.id==='settingsModal') document.getElementById('settingsModal').style.display='none'">
-        <div class="settings-modal-content">
-            <div class="settings-header">
-                <h2>⚙️ Ayarlar</h2>
-                <button onclick="document.getElementById('settingsModal').style.display='none'" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; padding: 5px; border-radius: 50%;">&times;</button>
-            </div>
-            <div class="settings-body">
-                <div class="settings-tabs">
-                    <div class="settings-tab active" onclick="document.querySelectorAll('.settings-content').forEach(x=>x.classList.remove('active')); document.getElementById('restaurantSettings').classList.add('active'); document.querySelectorAll('.settings-tab').forEach(x=>x.classList.remove('active')); event.target.classList.add('active')">🏪 Restoran</div>
-                    <div class="settings-tab" onclick="document.querySelectorAll('.settings-content').forEach(x=>x.classList.remove('active')); document.getElementById('categoriesSettings').classList.add('active'); document.querySelectorAll('.settings-tab').forEach(x=>x.classList.remove('active')); event.target.classList.add('active')">📚 Kategoriler</div>
-                    <div class="settings-tab" onclick="document.querySelectorAll('.settings-content').forEach(x=>x.classList.remove('active')); document.getElementById('themeSettings').classList.add('active'); document.querySelectorAll('.settings-tab').forEach(x=>x.classList.remove('active')); event.target.classList.add('active')">🎨 Tema</div>
-                </div>
-
-                <!-- Restaurant Settings -->
-                <div id="restaurantSettings" class="settings-content active" style="display: block;">
-                    <div class="settings-section">
-                        <h3>Restoran Bilgileri</h3>
-                        <div class="settings-grid">
-                            <div class="settings-group">
-                                <label style="font-weight:600;">Restoran Adı</label>
-                                <input type="text" id="settingsRestaurantName" placeholder="İkizler Restoran" style="width: 100%; padding: 10px; margin-top: 5px;">
-                                <label style="font-weight:600; display: block; margin-top: 10px;">Adres</label>
-                                <input type="text" id="settingsRestaurantAddress" placeholder="Lezzetin Adresi" style="width: 100%; padding: 10px; margin-top: 5px;">
-                                <label style="font-weight:600; display: block; margin-top: 10px;">WhatsApp</label>
-                                <input type="text" id="settingsWhatsappContact" placeholder="+90 5XX XXX XXXX" style="width: 100%; padding: 10px; margin-top: 5px;">
-                            </div>
-                            <div class="settings-group">
-                                <label style="font-weight:600;">Telefon</label>
-                                <input type="text" id="settingsPhone" placeholder="+90 216 XXX XX XX" style="width: 100%; padding: 10px; margin-top: 5px;">
-                                <label style="font-weight:600; display: block; margin-top: 10px;">E-posta</label>
-                                <input type="email" id="settingsEmail" placeholder="info@ikizler.com" style="width: 100%; padding: 10px; margin-top: 5px;">
-                                <label style="font-weight:600; display: block; margin-top: 10px;">Web Sitesi</label>
-                                <input type="url" id="settingsWebsite" placeholder="https://ikizler.com" style="width: 100%; padding: 10px; margin-top: 5px;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Categories Settings -->
-                <div id="categoriesSettings" class="settings-content" style="display: none;">
-                    <div class="settings-section">
-                        <h3>Kategori Yönetimi</h3>
-                        <div class="categories-manager">
-                            <div class="category-list" id="settingsCategoryList"></div>
-                            <div class="add-category-form">
-                                <input type="text" id="settingsNewCategoryName" placeholder="Kategori adı">
-                                <input type="text" id="settingsNewCategoryEmoji" placeholder="Emoji" maxlength="2" style="text-align: center;">
-                                <button onclick="app.addCategoryFromSettings()">Ekle</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Theme Settings -->
-                <div id="themeSettings" class="settings-content" style="display: none;">
-                    <div class="settings-section">
-                        <h3>Renk Teması</h3>
-                        <div class="settings-grid">
-                            <div class="settings-group">
-                                <label style="font-weight:600;">Ana Renk</label>
-                                <input type="color" id="primaryColor" value="#8B6F47" style="width: 100%; height: 40px; border: none; border-radius: 4px; margin-top: 5px; cursor: pointer;">
-                            </div>
-                            <div class="settings-group">
-                                <label style="font-weight:600;">İkincil Renk</label>
-                                <input type="color" id="secondaryColor" value="#D4AF37" style="width: 100%; height: 40px; border: none; border-radius: 4px; margin-top: 5px; cursor: pointer;">
-                            </div>
-                            <div class="settings-group">
-                                <label style="font-weight:600;">Vurgu Rengi</label>
-                                <input type="color" id="accentColor" value="#C85A3A" style="width: 100%; height: 40px; border: none; border-radius: 4px; margin-top: 5px; cursor: pointer;">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="text-align: center; padding: 20px;">
-                    <button onclick="app.saveSettings()" style="background: linear-gradient(135deg, #6B9B6B 0%, #5A8A5A 100%); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px;">💾 Ayarları Kaydet</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -1340,8 +1333,11 @@
                 window.addEventListener('offline', () => this.updateSyncStatus());
                 this.updateSyncStatus();
                 
-                // Load and render settings categories
-                this.renderCategoriesInSettings();
+                // Initialize settings panel
+                this.renderCategoriesInMenu();
+                
+                // Start with menu tab active
+                this.switchMainTab('menu');
             },
 
             // Sync Status Update
@@ -1678,48 +1674,140 @@
                 this.showToast('Görsel seçildi ✓');
             },
 
-            // Save Settings
-            saveSettings() {
+            // Handle Camera Image
+            handleCameraImage(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.selectedImageUrl = e.target.result;
+                        document.getElementById('selectedImageImg').src = e.target.result;
+                        document.getElementById('selectedImagePreview').style.display = 'block';
+                        this.showToast('Kamera görseli seçildi ✓');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            },
+
+            // Switch Main Tabs
+            switchMainTab(tabName) {
+                const formPanel = document.getElementById('formPanel');
+                const previewPanel = document.querySelector('.preview-panel');
+                const settingsPanel = document.getElementById('settingsPanel');
+                const menuTabBtn = document.getElementById('menuTabBtn');
+                const settingsTabBtn = document.getElementById('settingsTabBtn');
+
+                if (tabName === 'menu') {
+                    // Show menu
+                    formPanel.style.display = 'block';
+                    previewPanel.style.display = 'flex';
+                    if (settingsPanel) settingsPanel.style.display = 'none';
+                    
+                    menuTabBtn.style.background = 'var(--secondary-color)';
+                    menuTabBtn.style.border = '1px solid var(--secondary-color)';
+                    settingsTabBtn.style.background = 'rgba(255,255,255,0.1)';
+                    settingsTabBtn.style.border = '1px solid rgba(255,255,255,0.2)';
+                } else if (tabName === 'settings') {
+                    // Show settings
+                    formPanel.style.display = 'none';
+                    previewPanel.style.display = 'none';
+                    if (settingsPanel) {
+                        settingsPanel.style.display = 'block';
+                        this.renderCategoriesInMenu();
+                        
+                        // Load current values
+                        document.getElementById('menuRestaurantName').value = document.getElementById('restaurantName').value;
+                        document.getElementById('menuRestaurantAddress').value = document.getElementById('restaurantAddress').value;
+                        document.getElementById('menuRestaurantWhatsapp').value = document.getElementById('whatsappContact').value;
+                    }
+                    
+                    menuTabBtn.style.background = 'rgba(255,255,255,0.1)';
+                    menuTabBtn.style.border = '1px solid rgba(255,255,255,0.2)';
+                    settingsTabBtn.style.background = 'var(--secondary-color)';
+                    settingsTabBtn.style.border = '1px solid var(--secondary-color)';
+                }
+            },
+
+            // Toggle Settings Panel (for compatibility)
+            toggleSettings() {
+                this.switchMainTab('settings');
+            },
+
+            // Switch Settings Tabs
+            switchSettingsTab(tabName) {
+                // Hide all tabs
+                document.querySelectorAll('.settings-menu-content').forEach(tab => {
+                    tab.style.display = 'none';
+                });
+                
+                // Show selected tab
+                document.getElementById('settingsTab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).style.display = 'block';
+                
+                // Update button styles
+                document.querySelectorAll('.settings-menu-tab').forEach(btn => {
+                    btn.style.background = 'white';
+                    btn.style.color = 'var(--text-dark)';
+                    btn.style.border = '1px solid var(--border-color)';
+                    btn.style.borderBottom = 'none';
+                });
+                event.target.style.background = 'var(--secondary-color)';
+                event.target.style.color = 'white';
+                event.target.style.border = '1px solid var(--secondary-color)';
+            },
+
+            // Save Restaurant Settings
+            saveRestaurantSettings() {
+                const name = document.getElementById('menuRestaurantName').value;
+                const address = document.getElementById('menuRestaurantAddress').value;
+                const whatsapp = document.getElementById('menuRestaurantWhatsapp').value;
+                const phone = document.getElementById('menuRestaurantPhone').value;
+                const email = document.getElementById('menuRestaurantEmail').value;
+
+                document.getElementById('restaurantName').value = name;
+                document.getElementById('restaurantAddress').value = address;
+                document.getElementById('whatsappContact').value = whatsapp;
+
+                this.previewUpdate();
+                this.autoSync();
+                this.showToast('Restoran bilgileri kaydedildi ✓');
+            },
+
+            // Save Website Settings
+            saveWebsiteSettings() {
                 const settings = {
-                    phone: document.getElementById('settingsPhone').value,
-                    email: document.getElementById('settingsEmail').value,
-                    website: document.getElementById('settingsWebsite').value,
-                    primaryColor: document.getElementById('primaryColor').value,
-                    secondaryColor: document.getElementById('secondaryColor').value,
-                    accentColor: document.getElementById('accentColor').value,
+                    website: document.getElementById('menuWebsiteUrl').value,
+                    maps: document.getElementById('menuMapsUrl').value,
+                    facebook: document.getElementById('menuFacebookUrl').value,
+                    instagram: document.getElementById('menuInstagramUrl').value,
                     lastUpdated: new Date().toISOString()
                 };
 
                 try {
-                    localStorage.setItem(`ikizler_settings_${this.restaurantId}`, JSON.stringify(settings));
-                    
-                    // Apply colors
-                    document.documentElement.style.setProperty('--primary-color', settings.primaryColor);
-                    document.documentElement.style.setProperty('--secondary-color', settings.secondaryColor);
-                    document.documentElement.style.setProperty('--accent-color', settings.accentColor);
-                    
-                    document.getElementById('settingsModal').style.display = 'none';
-                    this.showToast('Ayarlar kaydedildi ✓');
+                    localStorage.setItem(`ikizler_website_${this.restaurantId}`, JSON.stringify(settings));
+                    this.showToast('Web sitesi ayarları kaydedildi ✓');
                 } catch (error) {
-                    console.error('Settings Save Error:', error);
                     this.showToast('Hata oluştu', 'error');
                 }
             },
 
-            // Load Settings
-            loadSettings() {
-                try {
-                    const settings = localStorage.getItem(`ikizler_settings_${this.restaurantId}`);
-                    return settings ? JSON.parse(settings) : {};
-                } catch (error) {
-                    return {};
-                }
+            // Render Categories in Menu
+            renderCategoriesInMenu() {
+                const container = document.getElementById('menuCategoryList');
+                container.innerHTML = Object.entries(this.categories)
+                    .sort((a, b) => a[1].order - b[1].order)
+                    .map(([key, cat]) => `
+                        <div class="category-item">
+                            <span class="category-item-emoji">${cat.emoji}</span>
+                            <span class="category-item-name">${cat.name}</span>
+                            <button class="category-remove-btn" onclick="app.removeCategory('${key}')">Sil</button>
+                        </div>
+                    `).join('');
             },
 
-            // Add Category from Settings
-            addCategoryFromSettings() {
-                const name = document.getElementById('settingsNewCategoryName').value.trim();
-                const emoji = document.getElementById('settingsNewCategoryEmoji').value.trim();
+            // Add Category from Menu
+            addCategoryFromMenu() {
+                const name = document.getElementById('menuNewCategoryName').value.trim();
+                const emoji = document.getElementById('menuNewCategoryEmoji').value.trim();
 
                 if (!name || !emoji) {
                     this.showToast('Kategori adı ve emoji girin', 'error');
@@ -1735,28 +1823,14 @@
                     order: maxOrder + 1
                 };
 
-                document.getElementById('settingsNewCategoryName').value = '';
-                document.getElementById('settingsNewCategoryEmoji').value = '';
+                document.getElementById('menuNewCategoryName').value = '';
+                document.getElementById('menuNewCategoryEmoji').value = '';
 
-                this.renderCategoriesInSettings();
+                this.renderCategoriesInMenu();
                 this.updateCategorySelect();
                 this.renderCategoryTabs();
                 this.autoSync();
                 this.showToast(`${name} kategorisi eklendi ✓`);
-            },
-
-            // Render Categories in Settings
-            renderCategoriesInSettings() {
-                const container = document.getElementById('settingsCategoryList');
-                container.innerHTML = Object.entries(this.categories)
-                    .sort((a, b) => a[1].order - b[1].order)
-                    .map(([key, cat]) => `
-                        <div class="category-item">
-                            <span class="category-item-emoji">${cat.emoji}</span>
-                            <span class="category-item-name">${cat.name}</span>
-                            <button class="category-remove-btn" onclick="app.removeCategory('${key}')">Sil</button>
-                        </div>
-                    `).join('');
             },
 
             // Add Dish
@@ -1770,18 +1844,14 @@
                     return;
                 }
 
-                if (!this.selectedImageUrl) {
-                    this.showToast('Lütfen önce görsel seçin', 'error');
-                    return;
-                }
-
+                // Görsel seçimi artık opsiyonel
                 const dishId = `${category}_${Date.now()}`;
                 const dish = {
                     id: dishId,
                     name,
                     price: price.toFixed(2),
                     category,
-                    image: this.selectedImageUrl,
+                    image: this.selectedImageUrl || 'https://via.placeholder.com/50?text=No+Image',
                     timestamp: new Date().toISOString()
                 };
 
@@ -1957,34 +2027,58 @@
                 }
             },
 
-            // Download as JPEG
-            async downloadAsJPEG(format = 'portrait') {
+            // Download as JPEG - A4 Format (210x297mm @ 300DPI)
+            async downloadAsJPEG(format = 'a4') {
                 this.showToast('JPEG oluşturuluyor...');
                 try {
                     const element = document.getElementById('menuPreview');
-                    const width = 1080;
-                    const height = format === 'portrait' ? 1920 : 1080;
+                    
+                    // A4 boyutları: 210mm x 297mm @ 300DPI = 2480x3508px
+                    const a4Width = 2480;
+                    const a4Height = 3508;
 
                     const canvas = await html2canvas(element, {
-                        scale: 2,
+                        scale: 3,
                         backgroundColor: '#FEFDFB',
                         logging: false,
                         useCORS: true,
                         allowTaint: true,
-                        width: width,
-                        height: height
+                        windowHeight: a4Height * 1.2
                     });
 
-                    // JPEG olarak dönüştür
-                    canvas.toBlob((blob) => {
+                    // A4 ebatında yeni canvas oluştur
+                    const a4Canvas = document.createElement('canvas');
+                    a4Canvas.width = a4Width;
+                    a4Canvas.height = a4Height;
+                    const a4Ctx = a4Canvas.getContext('2d');
+                    
+                    // Beyaz arka plan
+                    a4Ctx.fillStyle = '#FEFDFB';
+                    a4Ctx.fillRect(0, 0, a4Width, a4Height);
+                    
+                    // İçeriği tut kaplayacak şekilde ölçekle
+                    const scale = Math.min(a4Width / canvas.width, a4Height / canvas.height);
+                    const x = (a4Width - canvas.width * scale) / 2;
+                    const y = (a4Height - canvas.height * scale) / 2;
+                    
+                    if (scale >= 1) {
+                        // Orijinal boyutu koru, ortala
+                        a4Ctx.drawImage(canvas, x, y, canvas.width * scale, canvas.height * scale);
+                    } else {
+                        // Ölçekle
+                        a4Ctx.drawImage(canvas, x, y, canvas.width * scale, canvas.height * scale);
+                    }
+
+                    // JPEG olarak indir
+                    a4Canvas.toBlob((blob) => {
                         const url = URL.createObjectURL(blob);
                         const link = document.createElement('a');
                         link.href = url;
-                        link.download = `menu_${new Date().toISOString().slice(0,10)}_${width}x${height}.jpg`;
+                        link.download = `menu_a4_${new Date().toISOString().slice(0,10)}.jpg`;
                         link.click();
                         URL.revokeObjectURL(url);
                         this.showToast('JPEG indirildi ✓');
-                    }, 'image/jpeg', 0.95);
+                    }, 'image/jpeg', 0.98);
                 } catch (error) {
                     console.error('Download Error:', error);
                     this.showToast('İndirme hatası: ' + error.message, 'error');
@@ -2066,13 +2160,9 @@
         // Close modal when clicking outside
         window.onclick = (event) => {
             const imageModal = document.getElementById('imageSearchModal');
-            const settingsModal = document.getElementById('settingsModal');
             
             if (event.target === imageModal) {
                 app.closeImageSearchModal();
-            }
-            if (event.target === settingsModal) {
-                app.closeSettingsModal();
             }
         };
 
