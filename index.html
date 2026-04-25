@@ -1330,6 +1330,7 @@
                 this.renderCategories();
                 this.updateCategorySelect();
                 this.renderCategoryTabs();
+                this.renderDishes();
                 this.setupEventListeners();
                 this.loadFromFirebase();
                 
@@ -1379,6 +1380,7 @@
                         whatsappContact: document.getElementById('whatsappContact').value,
                         dishes: this.dishes,
                         categories: this.categories,
+                        logo: document.getElementById('previewLogoImg').src || null,
                         lastSync: new Date().toISOString()
                     };
 
@@ -1417,7 +1419,12 @@
                         document.getElementById('logoPreview').innerHTML = `<img src="${base64}">`;
                         document.getElementById('previewLogoImg').src = base64;
                         document.getElementById('previewLogo').style.display = 'block';
+                        document.getElementById('menuPreview').style.backgroundImage = `linear-gradient(rgba(254, 253, 251, 0.96), rgba(254, 253, 251, 0.96)), url('${base64}')`;
+                        document.getElementById('menuPreview').style.backgroundSize = 'contain';
+                        document.getElementById('menuPreview').style.backgroundRepeat = 'no-repeat';
+                        document.getElementById('menuPreview').style.backgroundPosition = 'center top';
                         this.previewUpdate();
+                        this.saveToLocalStorage();
                         
                         // Logo'yu Firebase'e kaydet
                         const logoData = {
@@ -1496,11 +1503,11 @@
 
             renderCategoryTabs() {
                 const container = document.getElementById('categoryTabs');
-                container.innerHTML = '<div class="category-tab active" onclick="app.filterCategory(\'all\')">Tümü</div>' +
+                container.innerHTML = '<div class="category-tab active" onclick="app.filterCategory(\'all\', event)">Tümü</div>' +
                     Object.entries(this.categories)
                         .sort((a, b) => a[1].order - b[1].order)
                         .map(([key, cat]) => `
-                            <div class="category-tab" onclick="app.filterCategory('${key}')">
+                            <div class="category-tab" onclick="app.filterCategory('${key}', event)">
                                 ${cat.emoji} ${cat.name}
                             </div>
                         `).join('');
@@ -1697,6 +1704,14 @@
                 }
             },
 
+            openImageSearchModal() {
+                document.getElementById('imageSearchModal').style.display = 'flex';
+            },
+
+            closeImageSearchModal() {
+                document.getElementById('imageSearchModal').style.display = 'none';
+            },
+
             // Switch Main Tabs
             switchMainTab(tabName) {
                 const formPanel = document.getElementById('formPanel');
@@ -1777,6 +1792,7 @@
 
                 this.previewUpdate();
                 this.autoSync();
+                this.saveToLocalStorage();
                 this.showToast('Restoran bilgileri kaydedildi ✓');
             },
 
@@ -1879,10 +1895,14 @@
             },
 
             // Filter Category
-            filterCategory(category) {
+            filterCategory(category, event) {
                 this.currentCategory = category;
                 document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
-                event.target.classList.add('active');
+                if (event && event.currentTarget) {
+                    event.currentTarget.classList.add('active');
+                } else if (event && event.target) {
+                    event.target.classList.add('active');
+                }
                 this.renderDishes();
             },
 
@@ -1923,13 +1943,22 @@
                 document.getElementById('footerAddress').textContent = document.getElementById('restaurantAddress').value;
                 document.getElementById('footerWhatsapp').textContent = document.getElementById('whatsappContact').value;
 
+                const logoSrc = document.getElementById('previewLogoImg').src;
+                if (logoSrc) {
+                    const previewElement = document.getElementById('menuPreview');
+                    previewElement.style.backgroundImage = `linear-gradient(rgba(254, 253, 251, 0.96), rgba(254, 253, 251, 0.96)), url('${logoSrc}')`;
+                    previewElement.style.backgroundSize = 'contain';
+                    previewElement.style.backgroundRepeat = 'no-repeat';
+                    previewElement.style.backgroundPosition = 'center top';
+                }
+
                 // Watermark güncelle
                 const watermark = document.querySelector('.menu-watermark');
                 if (watermark) {
                     watermark.textContent = document.getElementById('restaurantName').value;
                 }
 
-                const grouped = {};
+                const grouped = {},
                 Object.values(this.dishes).forEach(dish => {
                     if (!grouped[dish.category]) grouped[dish.category] = [];
                     grouped[dish.category].push(dish);
@@ -1966,9 +1995,19 @@
                     const data = localStorage.getItem(`ikizler_menu_${this.restaurantId}`);
                     if (data) {
                         const parsed = JSON.parse(data);
-                        document.getElementById('restaurantName').value = parsed.restaurantName || 'İkizler Restoran';
-                        document.getElementById('restaurantAddress').value = parsed.restaurantAddress || 'Lezzetin Adresi';
-                        document.getElementById('whatsappContact').value = parsed.whatsappContact || '+90 5XX XXX XXXX';
+                        const restaurantName = parsed.restaurantName || 'İkizler Restoran';
+                        const restaurantAddress = parsed.restaurantAddress || 'Lezzetin Adresi';
+                        const whatsappContact = parsed.whatsappContact || '+90 5XX XXX XXXX';
+
+                        document.getElementById('restaurantName').value = restaurantName;
+                        document.getElementById('restaurantAddress').value = restaurantAddress;
+                        document.getElementById('whatsappContact').value = whatsappContact;
+                        document.getElementById('menuRestaurantName').value = restaurantName;
+                        document.getElementById('menuRestaurantAddress').value = restaurantAddress;
+                        document.getElementById('menuRestaurantWhatsapp').value = whatsappContact;
+                        document.getElementById('menuRestaurantPhone').value = parsed.phone || '';
+                        document.getElementById('menuRestaurantEmail').value = parsed.email || '';
+
                         this.dishes = parsed.dishes || {};
                         this.categories = parsed.categories || this.categories;
                         
@@ -1977,6 +2016,10 @@
                             document.getElementById('logoPreview').innerHTML = `<img src="${parsed.logo}">`;
                             document.getElementById('previewLogoImg').src = parsed.logo;
                             document.getElementById('previewLogo').style.display = 'block';
+                            document.getElementById('menuPreview').style.backgroundImage = `linear-gradient(rgba(254, 253, 251, 0.96), rgba(254, 253, 251, 0.96)), url('${parsed.logo}')`;
+                            document.getElementById('menuPreview').style.backgroundSize = 'contain';
+                            document.getElementById('menuPreview').style.backgroundRepeat = 'no-repeat';
+                            document.getElementById('menuPreview').style.backgroundPosition = 'center top';
                         }
                     }
                 } catch (error) {
@@ -1991,6 +2034,8 @@
                         restaurantName: document.getElementById('restaurantName').value,
                         restaurantAddress: document.getElementById('restaurantAddress').value,
                         whatsappContact: document.getElementById('whatsappContact').value,
+                        phone: document.getElementById('menuRestaurantPhone') ? document.getElementById('menuRestaurantPhone').value : '',
+                        email: document.getElementById('menuRestaurantEmail') ? document.getElementById('menuRestaurantEmail').value : '',
                         dishes: this.dishes,
                         categories: this.categories,
                         logo: document.getElementById('previewLogoImg').src || null,
